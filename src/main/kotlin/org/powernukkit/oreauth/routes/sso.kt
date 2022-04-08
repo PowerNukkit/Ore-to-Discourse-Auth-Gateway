@@ -19,7 +19,6 @@ package org.powernukkit.oreauth.routes
 
 import io.ktor.application.*
 import io.ktor.http.*
-import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
@@ -56,6 +55,9 @@ fun Routing.installSsoRoutes(settings: Settings) {
         get("/signup") {
             loginProcess()
         }
+        get("/sudo") {
+            loginProcess()
+        }
         get("discourse-callback/{payload}/{signature}") {
             val authSsoRequest = try {
                 EncodedSso(
@@ -84,17 +86,6 @@ fun Routing.installSsoRoutes(settings: Settings) {
             }).toString()
             call.respondRedirect(signedUrl)
         }
-    }
-
-    get("/accounts/logout") {
-        val referer = call.request.header("Referer")
-        call.respondRedirect(with(URLBuilder(settings.discourseUrl)){
-            if (!referer.isNullOrBlank()) {
-                parameters.append("referer", referer)
-            }
-            fragment = "action--ore-logout"
-            buildString()
-        })
     }
 }
 

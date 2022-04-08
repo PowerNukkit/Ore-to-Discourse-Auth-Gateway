@@ -22,6 +22,7 @@ data class Settings(
     val port: Int,
     val host: String,
     val baseUrl: String,
+    val oreUrl: String,
     val discourseUrl: String,
     val discourseSsoSecret: String,
     val authSsoSecret: String,

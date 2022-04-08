@@ -26,6 +26,7 @@ import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 import kotlinx.cli.*
 import org.powernukkit.oreauth.routes.installAvatarRoutes
+import org.powernukkit.oreauth.routes.installLogoutRoutes
 import org.powernukkit.oreauth.routes.installRobotsTxt
 import org.powernukkit.oreauth.routes.installSsoRoutes
 import org.slf4j.LoggerFactory
@@ -37,6 +38,7 @@ object Main {
         install(IgnoreTrailingSlash)
         routing {
             installSsoRoutes(settings)
+            installLogoutRoutes(settings)
             installAvatarRoutes(settings)
             installRobotsTxt()
             get("/favicon.ico") { call.respondRedirect(settings.discourseUrl + "/favicon.ico") }
@@ -81,6 +83,9 @@ object Main {
         val baseUrl by app.option(ArgType.String, "base-url", "bu", "The base URL where this auth gateway will be running")
             .env("BASE_URL", "http://localhost:8000")
 
+        val oreUrl by app.option(ArgType.String, "ore-url", "ou", "The root URL of your Ore installation")
+            .env("ORE_URL")
+
         val discourseUrl by app.option(ArgType.String, "discourse-url", "du", "The URL for the discourse homepage")
             .env("DISCOURSE_URL")
 
@@ -96,6 +101,7 @@ object Main {
             port = port,
             host = host,
             baseUrl = baseUrl.removeSuffix("/"),
+            oreUrl = oreUrl.removeSuffix("/"),
             discourseUrl = discourseUrl,
             discourseSsoSecret = discourseSsoSecret,
             authSsoSecret = authSsoSecret,
