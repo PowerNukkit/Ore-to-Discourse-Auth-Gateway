@@ -13,4 +13,7 @@ services:
       ORE_URL: http://localhost:9000
       DISCOURSE_URL: http://discourse.example.com
       DISCOURSE_SSO_SECRET: changeme
+      DISCOURSE_API_KEY: changeme
+      DISCOURSE_API_USER: system
       AUTH_SSO_SECRET: changeme
+      AUTH_API_KEY: changeme

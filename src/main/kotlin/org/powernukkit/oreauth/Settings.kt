@@ -25,5 +25,8 @@ data class Settings(
     val oreUrl: String,
     val discourseUrl: String,
     val discourseSsoSecret: String,
+    val discourseApiKey: String,
+    val discourseApiUser: String,
     val authSsoSecret: String,
+    val authApiKey: String,
 )

@@ -24,24 +24,32 @@ import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
+import io.ktor.util.*
 import kotlinx.cli.*
-import org.powernukkit.oreauth.routes.installAvatarRoutes
-import org.powernukkit.oreauth.routes.installLogoutRoutes
-import org.powernukkit.oreauth.routes.installRobotsTxt
-import org.powernukkit.oreauth.routes.installSsoRoutes
+import org.powernukkit.oreauth.features.createHttpClient
+import org.powernukkit.oreauth.features.installStatusPages
+import org.powernukkit.oreauth.routes.*
 import org.slf4j.LoggerFactory
 
 object Main {
     private fun runServer(settings: Settings) = embeddedServer(CIO, port = settings.port, host = settings.host) {
+        val httpClient = createHttpClient()
+
         install(ContentNegotiation) { json() }
         install(CallLogging)
         install(IgnoreTrailingSlash)
+        installStatusPages(settings)
         routing {
             installSsoRoutes(settings)
             installLogoutRoutes(settings)
             installAvatarRoutes(settings)
             installRobotsTxt()
+            installUsersRoutes(settings, httpClient)
             get("/favicon.ico") { call.respondRedirect(settings.discourseUrl + "/favicon.ico") }
+            get("/accounts/settings/{username}") {
+                val username = call.parameters.getOrFail("username")
+                call.respondRedirect("${settings.discourseUrl}/u/$username/preferences")
+            }
         }
     }.start(true)
 
@@ -92,8 +100,17 @@ object Main {
         val discourseSsoSecret by app.option(ArgType.String, "discourse-sso-secret", "dss", "The secret set at discourse connect provider secrets in the Discourse admin panel")
             .env("DISCOURSE_SSO_SECRET")
 
+        val discourseApiKey by app.option(ArgType.String, "discourse-api-key", "dak", "The API key used to query and manipulate users")
+            .env("DISCOURSE_API_KEY")
+
+        val discourseApiUser by app.option(ArgType.String, "discourse-api-user", "dau", "The user which will be used with the discourse API key")
+            .env("DISCOURSE_API_USER", "system")
+
         val authSsoSecret by app.option(ArgType.String, "auth-sso-secret", "ss", "The SSO Secret used to communicate with Ore")
             .env("AUTH_SSO_SECRET")
+
+        val authApiKey by app.option(ArgType.String, "auth-api-key", "aak", "Key used when Ore tries to do some elevated actions on Discourse, like user management")
+            .env("AUTH_API_KEY")
 
         app.parse(args)
 
@@ -104,7 +121,10 @@ object Main {
             oreUrl = oreUrl.removeSuffix("/"),
             discourseUrl = discourseUrl,
             discourseSsoSecret = discourseSsoSecret,
+            discourseApiKey = discourseApiKey,
+            discourseApiUser = discourseApiUser,
             authSsoSecret = authSsoSecret,
+            authApiKey = authApiKey,
         ))
     }
 }
