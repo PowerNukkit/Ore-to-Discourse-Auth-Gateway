@@ -55,5 +55,7 @@ application {
     mainClass.set("org.powernukkit.oreauth.Main")
 }
 
+@Suppress("unused")
 fun DependencyHandlerScope.ktor(module: String, version: String = "1.6.8") = "io.ktor:ktor-$module:$version"
+@Suppress("unused")
 fun DependencyHandlerScope.kotlinx(module: String, version: String) = "org.jetbrains.kotlinx:kotlinx-$module:$version"
