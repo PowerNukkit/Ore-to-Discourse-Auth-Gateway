@@ -84,23 +84,11 @@ object Main {
         val discourseUrl by app.option(ArgType.String, "discourse-url", "du", "The URL for the discourse homepage")
             .env("DISCOURSE_URL")
 
-        val discourseApiToken by app.option(ArgType.String, "discourse-api-token", "dat", "The API token used to communicate with discourse")
-            .env("DISCOURSE_API_TOKEN")
-
-        val discourseApiUsername by app.option(ArgType.String, "discourse-api-username", "dau", "The username used to communicate with discourse")
-            .env("DISCOURSE_API_USERNAME")
-
         val discourseSsoSecret by app.option(ArgType.String, "discourse-sso-secret", "dss", "The secret set at discourse connect provider secrets in the Discourse admin panel")
             .env("DISCOURSE_SSO_SECRET")
 
-        val authApiKey by app.option(ArgType.String, "auth-api-key", "aak", "The API Key used to communicate with Ore")
-            .env("AUTH_API_KEY")
-
         val authSsoSecret by app.option(ArgType.String, "auth-sso-secret", "ss", "The SSO Secret used to communicate with Ore")
             .env("AUTH_SSO_SECRET")
-
-        val authSsoApiKey by app.option(ArgType.String, "auth-sso-api-key", "sak", "The SSO API Key used to communicate with Ore")
-            .env("AUTH_SSO_API_KEY")
 
         app.parse(args)
 
@@ -109,12 +97,8 @@ object Main {
             host = host,
             baseUrl = baseUrl.removeSuffix("/"),
             discourseUrl = discourseUrl,
-            discourseApiToken = discourseApiToken,
-            discourseApiUsername = discourseApiUsername,
             discourseSsoSecret = discourseSsoSecret,
-            authApiKey = authApiKey,
             authSsoSecret = authSsoSecret,
-            authSsoApiKey = authSsoApiKey,
         ))
     }
 }
