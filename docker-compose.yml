@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  ore2discourse-auth-gateway:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      PORT: 8000
+      HOST: localhost
+      BASE_URL: http://localhost:8000
+      DISCOURSE_URL: discourse.example.com
+      DISCOURSE_SSO_SECRET: changeme
+      AUTH_SSO_SECRET: changeme
