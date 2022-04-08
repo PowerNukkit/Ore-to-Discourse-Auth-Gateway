@@ -27,18 +27,16 @@ import io.ktor.server.engine.*
 import io.ktor.util.*
 import kotlinx.cli.*
 import org.powernukkit.oreauth.features.createHttpClient
-import org.powernukkit.oreauth.features.installStatusPages
 import org.powernukkit.oreauth.routes.*
 import org.slf4j.LoggerFactory
 
 object Main {
     private fun runServer(settings: Settings) = embeddedServer(CIO, port = settings.port, host = settings.host) {
         val httpClient = createHttpClient()
-
-        install(ContentNegotiation) { json() }
         install(CallLogging)
+        install(ContentNegotiation) { json() }
         install(IgnoreTrailingSlash)
-        installStatusPages(settings)
+        //installStatusPages(settings)
         routing {
             installSsoRoutes(settings)
             installLogoutRoutes(settings)

@@ -9,7 +9,9 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.job
 import kotlinx.serialization.json.*
 import org.powernukkit.oreauth.AuthUser
 import org.powernukkit.oreauth.Settings
@@ -25,7 +27,7 @@ fun Routing.installUsersRoutes(settings: Settings, httpClient: HttpClient) {
         }
         val username = call.parameters.getOrFail("username")
         try {
-            val emailsAsync = async(Dispatchers.IO) {
+            val emailsAsync = async(Dispatchers.IO + SupervisorJob(coroutineContext.job)) {
                 httpClient.request<JsonObject>(settings.discourseUrl) {
                     url.pathComponents("u", username, "emails.json")
                     headers.append("Api-Key", settings.discourseApiKey)
@@ -54,7 +56,7 @@ fun Routing.installUsersRoutes(settings: Settings, httpClient: HttpClient) {
             throw cancellation
         } catch (failed: Exception) {
             if (failed is ClientRequestException && failed.response.status == HttpStatusCode.NotFound) {
-                call.respond(HttpStatusCode.NotFound, "")
+                call.respond(HttpStatusCode.NotFound, "Not Found")
             } else {
                 log.error("Failed to call Sponge", failed)
                 call.respond(HttpStatusCode.InternalServerError, "")

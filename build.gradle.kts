@@ -38,7 +38,6 @@ dependencies {
     implementation(ktor("client-core"))
     implementation(ktor("client-cio"))
     implementation(ktor("client-serialization"))
-    implementation(ktor("client-logging"))
     implementation(ktor("server-core"))
     implementation(ktor("server-cio"))
     implementation(ktor("serialization"))
