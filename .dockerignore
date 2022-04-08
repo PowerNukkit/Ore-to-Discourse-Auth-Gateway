@@ -1,0 +1,10 @@
+README.md
+data
+*.iml
+logs
+.idea
+.gradle
+Dockerfile
+docker-compose.yml
+/build
+/bin
