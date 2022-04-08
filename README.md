@@ -10,11 +10,11 @@ This app does not hold any state and don't store any data, all it does is to con
 1. Edit the `Ore` settings file `Ore/ore/conf/ore-default-settings.conf` in the folder where you installed `Ore`
 2. Inside the `auth` block set a secure secret at `sso` ➡️ `secret`, this will be your `--auth-sso-api-key`
 3. Inside the `auth` ➡ `api` set the url where this app will be running at `url`, this will be your `--base-url`
-4. (Optional) Inside the `auth` ➡ `api` set the `avatar-url` to `https://{domain-of-your-discourse-forum}/user_avatar/{domain-of-your-discourse-forum}/%s/120/1.png` replacing `{domain-of-your-discourse-forum}` with the domain of your discourse forum, not that it appears twice in the URL.
+4. (Optional) Inside the `auth` ➡ `api` set the `avatar-url` to `https://{domain-of-your-discourse-forum}/user_avatar/{domain-of-your-discourse-forum}/%s/120/1.png` replacing `{domain-of-your-discourse-forum}` with the domain of your discourse forum, note that it appears twice in the URL.
 
 ### Discourse
 1. Go to your `Discourse Admin Panel` ➡️ `Settings` ➡️ `Login`
-2. Enable `enable discourse connect provide` (Please don't confuse with `enable discourse connect`, the setting ends with **provider**)
+2. Enable `enable discourse connect provider` (Please don't confuse with `enable discourse connect`, the setting ends with **provider**)
 3. Add the host where this app will be running and a random and secure SSO secret key of your choice to the `discourse connect provider secrets` settings, this will be your `--discourse-sso-secret` parameter
 4. Go to `Discourse Admin Panel` ➡️ `Customise` ➡️ `Themes` and repeat the next steps for each enabled theme that you have.
 5. Click on the theme name, then on the `Edit CSS/HTML`
@@ -78,7 +78,7 @@ I'm going to use `gradlew run` here because it's easier.
 
 1. Download this repository
 2. Open the folder with your favorite terminal (PowerShell, CMD, Konsole, gnome-terminal, xTerm, etc)
-3. Run `gradlew run -h` to learn your options, you can also set the parameters using environment, for example you can set an environment parameter named `DISCOURSE_URL` instead of passing it as `--discourse-url` or `-du` directly.
+3. Run `./gradlew run --args="-h"` to learn your options, you can also set the parameters using environment, for example you can set an environment parameter named `DISCOURSE_URL` instead of passing it as `--discourse-url` or `-du` directly.
 4. Call again but instead of `-h` fill the arguments with real data, and you will be good to go after you get a log saying `Application started`. 
 
 # License
