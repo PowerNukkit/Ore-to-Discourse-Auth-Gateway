@@ -53,7 +53,7 @@ This app does not hold any state and don't store any data, all it does is to con
                 $( "#logging-out-dialog" ).dialog( "open" );
                 let user = $("#current-user > a").attr("title");
                 $.ajax({
-                    url: '/session/joserobjr',
+                    url: '/session/' + user,
                     type: 'DELETE',
                     success: function(result) {
                         const params = new Proxy(new URLSearchParams(window.location.search), {
@@ -61,7 +61,8 @@ This app does not hold any state and don't store any data, all it does is to con
                         });
                         let referer = params.referer;
                         if (!referer) {
-                            referer = 'https://plugins.powernukkit.org/';
+                            // Change to your fallback url
+                            referer = 'https://your.ore.domain.example.com/';
                         }
                         document.location = referer;
                     }
