@@ -82,7 +82,7 @@ I'm going to use `gradlew run` here because it's easier.
 4. Call again but instead of `-h` fill the arguments with real data, and you will be good to go after you get a log saying `Application started`. 
 
 # License
-This software is provided without any warranty.
+This software is provided without any warranty under the [GNU Affero General Public License version 3.0 or higher](https://www.gnu.org/licenses/agpl-3.0)
 
 [Ore]: https://github.com/SpongePowered/Ore
 [SpongeAuth]: https://github.com/SpongePowered/SpongeAuth
