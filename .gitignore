@@ -6,6 +6,11 @@
 *.iml
 out
 gen
+
+# VSCode
+.vscode/
+bin/
+
 # Cache of project
 .gradletasknamecache
 
