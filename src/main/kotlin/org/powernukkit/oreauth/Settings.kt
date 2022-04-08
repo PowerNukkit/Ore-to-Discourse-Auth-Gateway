@@ -17,6 +17,7 @@
 
 package org.powernukkit.oreauth
 
+@JvmRecord
 data class Settings(
     val port: Int,
     val host: String,

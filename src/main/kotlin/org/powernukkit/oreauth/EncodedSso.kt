@@ -17,11 +17,11 @@
 
 package org.powernukkit.oreauth
 
+@JvmRecord
 data class EncodedSso(
     val payload: String,
     val signature: String,
     val signer: HmacSha256Signer,
-    val isValid: Boolean = signer.verify(payload, signature)
-) {
-    val parameters = SsoParameters(payload)
-}
+    val isValid: Boolean = signer.verify(payload, signature),
+    val parameters: SsoParameters = SsoParameters(payload)
+)

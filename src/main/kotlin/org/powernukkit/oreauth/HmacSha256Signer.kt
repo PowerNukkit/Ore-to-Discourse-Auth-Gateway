@@ -19,8 +19,10 @@ package org.powernukkit.oreauth
 
 import io.ktor.sessions.*
 
-class HmacSha256Signer(ssoKey: String) {
-    private val transformer = SessionTransportTransformerMessageAuthentication(ssoKey.toByteArray())
+@JvmInline
+value class HmacSha256Signer(private val transformer: SessionTransportTransformerMessageAuthentication) {
+    constructor(ssoKey: String): this(SessionTransportTransformerMessageAuthentication(ssoKey.toByteArray()))
+
     fun sign(payload: String): EncodedSso {
         val (signedPayload, signature) = transformer.transformWrite(payload).split('/', limit = 2)
         return EncodedSso(signedPayload, signature, this, true)

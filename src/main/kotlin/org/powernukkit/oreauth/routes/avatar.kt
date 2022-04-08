@@ -32,23 +32,6 @@ fun Routing.installAvatarRoutes(settings: Settings) {
                 if ('x' !in it) it.toIntOrNull()
                 else it.split('x', limit = 2).mapNotNull { v -> v.toIntOrNull() }.maxOrNull() }
             ?.coerceIn(1, 512) ?: 256
-        /* Too heavy, I found another way
-        val response = settings.httpClient.get<JsonObject>(with(URLBuilder(settings.discourseUrl)) {
-            pathComponents("search/query.json")
-            parameters.append("term", username)
-            build()
-        })
-        val template = response["users"]?.jsonArray
-            ?.first { it.jsonObject["username"]?.jsonPrimitive?.content == username }
-            ?.jsonObject
-            ?.get("avatar_template")
-            ?.let { settings.discourseUrl + it.jsonPrimitive.content }
-        if (template == null) {
-            call.respond(HttpStatusCode.NotFound, "")
-            return@get
-        }
-        val url = template.replace("{size}", size.toString())
-         */
         val url = with(URLBuilder(settings.discourseUrl)) {
             pathComponents("user_avatar", host, username, size.toString(), "1.png")
             buildString()
