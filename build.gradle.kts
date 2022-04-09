@@ -38,9 +38,11 @@ dependencies {
     implementation(ktor("client-core"))
     implementation(ktor("client-cio"))
     implementation(ktor("client-serialization"))
+    implementation(ktor("client-logging"))
     implementation(ktor("server-core"))
     implementation(ktor("server-cio"))
     implementation(ktor("serialization"))
+    implementation("io.github.reactivecircus.cache4k:cache4k:0.4.0")
     implementation("ch.qos.logback:logback-classic:1.2.11")
 
     testImplementation(kotlin("test"))

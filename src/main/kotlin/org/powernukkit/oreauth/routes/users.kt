@@ -1,7 +1,9 @@
 package org.powernukkit.oreauth.routes
 
+import io.github.reactivecircus.cache4k.Cache
 import io.ktor.application.*
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -18,9 +20,18 @@ import org.powernukkit.oreauth.Settings
 import org.slf4j.LoggerFactory
 import java.util.*
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 fun Routing.installUsersRoutes(settings: Settings, httpClient: HttpClient) {
     val log = LoggerFactory.getLogger(this::class.java)
+
+    val userSearchCache = Cache.Builder()
+        .expireAfterWrite(5.minutes)
+        .maximumCacheSize(1000)
+        .build<String, Pair<Exception?, AuthUser?>>()
 
     suspend fun getAuthUserByUsername(username: String): AuthUser = coroutineScope {
         val emailsAsync = async(Dispatchers.IO + SupervisorJob(coroutineContext.job)) {
@@ -46,6 +57,18 @@ fun Routing.installUsersRoutes(settings: Settings, httpClient: HttpClient) {
             lang = userObj["locale"]?.jsonPrimitive?.contentOrNull,
             addGroups = userObj["groups"]?.jsonArray?.joinToString(separator = ",") { it.jsonObject["name"]!!.jsonPrimitive.content }
         )
+    }
+
+    suspend fun getAuthUserByUsernameWithCache(username: String): AuthUser {
+        val (failure, success) = userSearchCache.get(username) {
+            try {
+                return@get null to getAuthUserByUsername(username)
+            } catch (failure: Exception) {
+                return@get failure to null
+            }
+        }
+        failure?.let { throw it }
+        return success!!
     }
 
     post("/api/users") {
@@ -88,18 +111,39 @@ fun Routing.installUsersRoutes(settings: Settings, httpClient: HttpClient) {
             return@post
         }
 
-        launch(Dispatchers.IO + SupervisorJob(coroutineContext.job)) {
-            httpClient.request<JsonObject>(settings.discourseUrl) {
-                method = HttpMethod.Post
-                body = JsonObject(mapOf("usernames" to JsonPrimitive(receivedRequest.username)))
-                url.pathComponents("groups", settings.discourseOrgGroup.toString(), "members.json")
-                headers.append("Api-Key", settings.discourseApiKey)
-                headers.append("Api-Username", settings.discourseApiUser)
+        CoroutineScope(Dispatchers.IO).launch {
+            while (true) {
+                try {
+                    httpClient.request<JsonObject>(settings.discourseUrl) {
+                        method = HttpMethod.Post
+                        body = JsonObject(mapOf("usernames" to JsonPrimitive(receivedRequest.username)))
+                        url.pathComponents("groups", settings.discourseOrgGroup.toString(), "members.json")
+                        headers.append("Api-Key", settings.discourseApiKey)
+                        headers.append("Api-Username", settings.discourseApiUser)
+                    }
+                    break
+                } catch (error: ClientRequestException) {
+                    if (error.response.status != HttpStatusCode.TooManyRequests) {
+                        throw error
+                    }
+                    try {
+                        val details = error.response.receive<JsonObject>()
+                        require(details["error_type"]!!.jsonPrimitive.content == "rate_limit")
+                        val waitTime = details["extras"]!!.jsonObject["wait_seconds"]!!.jsonPrimitive.long.toDuration(DurationUnit.SECONDS)
+                        delay(waitTime + 2.seconds)
+                    } catch (cancellation: CancellationException) {
+                        cancellation.addSuppressed(error)
+                        throw cancellation
+                    } catch (other: Exception) {
+                        error.addSuppressed(other)
+                        throw error
+                    }
+                }
             }
         }
 
         call.respond(
-            getAuthUserByUsername(receivedRequest.username)
+            getAuthUserByUsernameWithCache(receivedRequest.username)
         )
     }
     get("/api/users/{username}") {
@@ -110,7 +154,7 @@ fun Routing.installUsersRoutes(settings: Settings, httpClient: HttpClient) {
         val username = call.parameters.getOrFail("username")
         try {
             call.respond(
-                getAuthUserByUsername(username)
+                getAuthUserByUsernameWithCache(username)
             )
         } catch (cancellation: CancellationException) {
             throw cancellation
