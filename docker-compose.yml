@@ -15,5 +15,6 @@ services:
       DISCOURSE_SSO_SECRET: changeme
       DISCOURSE_API_KEY: changeme
       DISCOURSE_API_USER: system
+      DISCOURSE_ORGANIZATION_GROUP: -1
       AUTH_SSO_SECRET: changeme
       AUTH_API_KEY: changeme

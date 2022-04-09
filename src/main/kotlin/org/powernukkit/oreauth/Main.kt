@@ -75,8 +75,12 @@ object Main {
             default(env ?: fallback)
         }
 
-        fun SingleNullableOption<Int>.env(name: String, fallback: Int) = System.getenv(name).takeUnless { it.isNullOrBlank() }?.trim()?.toIntOrNull().let { env ->
-            default(env ?: fallback)
+        fun SingleNullableOption<Int>.env(name: String, fallback: Int?) = System.getenv(name).takeUnless { it.isNullOrBlank() }?.trim()?.toIntOrNull().let { env ->
+            if (env != null || fallback != null) {
+                default((env ?: fallback)!!)
+            } else {
+                required()
+            }
         }
 
         val app = ArgParser("PowerNukkit Ore to Discourse Auth Gateway")
@@ -104,6 +108,9 @@ object Main {
         val discourseApiUser by app.option(ArgType.String, "discourse-api-user", "dau", "The user which will be used with the discourse API key")
             .env("DISCOURSE_API_USER", "system")
 
+        val discourseOrgGroup by app.option(ArgType.Int, "discourse-organization-group", "dog", "Numeric ID of the discourse group where all organization accounts will be added")
+            .env("DISCOURSE_ORGANIZATION_GROUP", null)
+
         val authSsoSecret by app.option(ArgType.String, "auth-sso-secret", "ss", "The SSO Secret used to communicate with Ore")
             .env("AUTH_SSO_SECRET")
 
@@ -121,6 +128,7 @@ object Main {
             discourseSsoSecret = discourseSsoSecret,
             discourseApiKey = discourseApiKey,
             discourseApiUser = discourseApiUser,
+            discourseOrgGroup = discourseOrgGroup,
             authSsoSecret = authSsoSecret,
             authApiKey = authApiKey,
         ))
