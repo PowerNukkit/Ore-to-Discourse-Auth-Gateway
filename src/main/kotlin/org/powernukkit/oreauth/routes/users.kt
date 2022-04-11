@@ -31,10 +31,10 @@ fun Routing.installUsersRoutes(settings: Settings, httpClient: HttpClient) {
     val userSearchCache = Cache.Builder()
         .expireAfterWrite(5.minutes)
         .maximumCacheSize(1000)
-        .build<String, Pair<Exception?, AuthUser?>>()
+        .build<String, Optional<AuthUser>>()
 
-    suspend fun getAuthUserByUsername(username: String): AuthUser = coroutineScope {
-        val emailsAsync = async(Dispatchers.IO + SupervisorJob(coroutineContext.job)) {
+    suspend fun getAuthUserByUsername(username: String): AuthUser = withContext(Dispatchers.IO) {
+        val emailsAsync = async(Dispatchers.IO) {
             httpClient.request<JsonObject>(settings.discourseUrl) {
                 url.pathComponents("u", username, "emails.json")
                 headers.append("Api-Key", settings.discourseApiKey)
@@ -52,23 +52,11 @@ fun Routing.installUsersRoutes(settings: Settings, httpClient: HttpClient) {
         AuthUser(
             id = userObj["id"]!!.jsonPrimitive.long,
             username = userObj["username"]!!.jsonPrimitive.content,
-            email = emailsAsync.await()["email"]!!.jsonPrimitive.content,
             avatarUrl = settings.discourseUrl + userObj["avatar_template"]!!.jsonPrimitive.content.replace("{size}", "256"),
             lang = userObj["locale"]?.jsonPrimitive?.contentOrNull,
-            addGroups = userObj["groups"]?.jsonArray?.joinToString(separator = ",") { it.jsonObject["name"]!!.jsonPrimitive.content }
+            addGroups = userObj["groups"]?.jsonArray?.joinToString(separator = ",") { it.jsonObject["name"]!!.jsonPrimitive.content },
+            email = emailsAsync.await()["email"]!!.jsonPrimitive.content
         )
-    }
-
-    suspend fun getAuthUserByUsernameWithCache(username: String): AuthUser {
-        val (failure, success) = userSearchCache.get(username) {
-            try {
-                return@get null to getAuthUserByUsername(username)
-            } catch (failure: Exception) {
-                return@get failure to null
-            }
-        }
-        failure?.let { throw it }
-        return success!!
     }
 
     post("/api/users") {
@@ -143,7 +131,9 @@ fun Routing.installUsersRoutes(settings: Settings, httpClient: HttpClient) {
         }
 
         call.respond(
-            getAuthUserByUsernameWithCache(receivedRequest.username)
+            getAuthUserByUsername(receivedRequest.username).also {
+                userSearchCache.put(receivedRequest.username, Optional.of(it))
+            }
         )
     }
     get("/api/users/{username}") {
@@ -153,13 +143,23 @@ fun Routing.installUsersRoutes(settings: Settings, httpClient: HttpClient) {
         }
         val username = call.parameters.getOrFail("username")
         try {
-            call.respond(
-                getAuthUserByUsernameWithCache(username)
-            )
+            userSearchCache.get(username)?.let { cached ->
+                if (cached.isEmpty) {
+                    call.respond(HttpStatusCode.NotFound, "Not Found")
+                } else {
+                    call.respond(cached.get())
+                }
+                return@get
+            }
+
+            val userData = getAuthUserByUsername(username)
+            userSearchCache.put(username, Optional.of(userData))
+            call.respond(userData)
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (failed: Exception) {
             if (failed is ClientRequestException && failed.response.status == HttpStatusCode.NotFound) {
+                userSearchCache.put(username, Optional.empty())
                 call.respond(HttpStatusCode.NotFound, "Not Found")
             } else {
                 log.error("Failed to call Sponge", failed)
