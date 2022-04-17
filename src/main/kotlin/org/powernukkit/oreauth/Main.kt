@@ -43,6 +43,7 @@ object Main {
             installAvatarRoutes(settings)
             installRobotsTxt()
             installUsersRoutes(settings, httpClient)
+            get("/") { call.respondRedirect(settings.discourseUrl) }
             get("/favicon.ico") { call.respondRedirect(settings.discourseUrl + "/favicon.ico") }
             get("/accounts/settings/{username}") {
                 val username = call.parameters.getOrFail("username")
